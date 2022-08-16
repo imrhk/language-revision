@@ -1,3 +1,5 @@
+import 'package:language_learning/main.dart';
+
 Map<String, String> get englishToFrench => <String, String>{}..addAll(() {
     final lines = data.split('\n');
     final map = <String, String>{};
@@ -5,7 +7,9 @@ Map<String, String> get englishToFrench => <String, String>{}..addAll(() {
       map[lines[i + 1]] = lines[i];
     }
     final entries = map.entries.toList();
-    entries.shuffle();
+    if (shuffle) {
+      entries.shuffle();
+    }
     return Map.fromEntries(entries);
   }());
 
@@ -16,7 +20,9 @@ Map<String, String> get frenchToEnglish => <String, String>{}..addAll(() {
       map[lines[i]] = lines[i + 1];
     }
     final entries = map.entries.toList();
-    entries.shuffle();
+    if (shuffle) {
+      entries.shuffle();
+    }
     return Map.fromEntries(entries);
   }());
 
@@ -263,4 +269,162 @@ it's my treat
 quand ?
 when?
 j'adorerais
-I would love to''';
+I would love to
+un
+one
+deux
+two
+trois
+three
+quatre
+four
+cinq
+five
+six
+six
+sept
+seven
+huit
+eight
+neuf
+nine
+onze
+eleven
+dix
+ten
+douze
+twelve
+treize
+thirteen
+quatorze
+fourteen
+quinze
+fifteen
+seize
+sixteen
+dix-sept
+seventeen
+dix-huit
+eighteen
+dix-neuf
+nineteen
+vingt
+twenty
+aimer
+to love; to like
+tu aimes l'art ?
+do you like art?
+je n'aime pas l'art
+I don't like art
+j'aime beaucoup la musique
+I like music a lot
+l'humour
+humour
+j'aime vivre à Paris
+I like living in Paris
+c'est une bonne idée
+it's a good idea
+pas vraiment
+not really
+je ne suis pas d'accord
+I don't agree
+moi non plus
+me neither
+ce week-end
+this weekend
+visiter
+to visit (a place)
+un musée
+a museum
+une galerie d'art
+an art gallery
+un concert
+a concert
+une histoire
+a story
+un ciné
+a cinema (casual)
+quel genre de films tu aimes ?
+what kind of films do you like?
+un film d'action
+an action film
+un film de science-fiction
+a sci-fi movie
+un film d'horreur
+a horror film
+je suis ouvert à tout
+I'm open to everything
+en ce moment
+at the moment
+ou
+or
+sinon
+otherwise
+je veux aller ...
+I want to go ...
+tu veux aller ...
+you want to go...
+au théâtre
+to the theatre
+au cinéma
+to the cinema
+je veux aller au théâtre
+I want to go to the theatre
+tu veux aller au cinéma ?
+do you want to go to the cinema?
+on peut aller ...
+we can go...
+à la place de ...
+instead of...
+je pense que ...
+I think that...
+ça a l'air bien
+it seems good
+je déteste ...
+I hate...
+je trouve ça ...
+I find that...
+très
+very
+ennuyeux
+boring
+incroyable
+incredible
+époustouflant
+breathtaking
+lourd
+unsubtle; heavy
+je pense que c'est intéressant
+I think that it's interesting
+je trouve ça nul
+I find that rubbish
+en plus ...
+what's more...
+surtout ...
+above all...
+par contre ...
+on the other hand...
+meilleur
+best
+un acteur; une actrice
+an actor; an actress
+préféré; préférée
+favourite
+un comédien
+an actor; a comedian
+une comédienne
+an actress; a comedian
+ce n'est pas mon truc
+that's not my thing
+ça ne me dérange pas
+I don't mind
+ça me tente bien
+I'm tempted
+si tu veux
+if you want
+j'en ai marre
+I'm fed up
+à chacun ses goûts
+to each their own
+c'est n'importe quoi
+it's nonsense''';

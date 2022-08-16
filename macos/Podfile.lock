@@ -1,15 +1,21 @@
 PODS:
   - FlutterMacOS (1.0.0)
+  - is_wear (0.0.1):
+    - FlutterMacOS
 
 DEPENDENCIES:
   - FlutterMacOS (from `Flutter/ephemeral`)
+  - is_wear (from `Flutter/ephemeral/.symlinks/plugins/is_wear/macos`)
 
 EXTERNAL SOURCES:
   FlutterMacOS:
     :path: Flutter/ephemeral
+  is_wear:
+    :path: Flutter/ephemeral/.symlinks/plugins/is_wear/macos
 
 SPEC CHECKSUMS:
   FlutterMacOS: 57701585bf7de1b3fc2bb61f6378d73bbdea8424
+  is_wear: 586677a31249625bfd4a6e5820f9fde907a4ab93
 
 PODFILE CHECKSUM: 6eac6b3292e5142cfc23bdeb71848a40ec51c14c
 

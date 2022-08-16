@@ -1,7 +1,6 @@
-import 'package:carousel_slider/carousel_slider.dart';
-import 'package:flip_card/flip_card.dart';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:is_wear/is_wear.dart';
 import 'package:wear/wear.dart';
 
 import 'data.dart';
@@ -9,10 +8,28 @@ import 'data.dart';
 TextStyle? textStyle;
 double space = 5;
 
-void main() {
+bool shuffle = true;
+
+late bool isWear;
+
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  try {
+    isWear = (await IsWear().check()) ?? false;
+  } catch (_) {
+    isWear = false;
+  }
+
   runApp(const App());
+}
+
+class AppScrollBehavior extends MaterialScrollBehavior {
+  @override
+  Set<PointerDeviceKind> get dragDevices => {
+        PointerDeviceKind.touch,
+        PointerDeviceKind.mouse,
+      };
 }
 
 class App extends StatelessWidget {
@@ -21,17 +38,21 @@ class App extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final materialApp = MaterialApp(
+      scrollBehavior: AppScrollBehavior(),
       theme: ThemeData(
         useMaterial3: true,
       ),
-      darkTheme: ThemeData.dark()
-          .copyWith(useMaterial3: true, scaffoldBackgroundColor: Colors.black),
+      darkTheme: ThemeData.dark().copyWith(
+        useMaterial3: true,
+        scaffoldBackgroundColor: Colors.black,
+        appBarTheme: const AppBarTheme(backgroundColor: Colors.black),
+      ),
       themeMode: ThemeMode.dark,
       home: const SelectionPage(),
     );
 
-    if (defaultTargetPlatform == TargetPlatform.android) {
-      textStyle = const TextStyle(fontSize: 24);
+    if (isWear) {
+      textStyle = const TextStyle(fontSize: 20);
       return WatchShape(
         builder: ((context, shape, child) {
           return child!;
@@ -46,62 +67,96 @@ class App extends StatelessWidget {
   }
 }
 
-class SelectionPage extends StatelessWidget {
+class SelectionPage extends StatefulWidget {
   const SelectionPage({Key? key}) : super(key: key);
 
   @override
+  State<SelectionPage> createState() => _SelectionPageState();
+}
+
+class _SelectionPageState extends State<SelectionPage> {
+  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            ElevatedButton(
-              child: Text(
-                '🇬🇧 → 🇫🇷',
-                style: textStyle,
+    return SafeArea(
+      child: Scaffold(
+        appBar: isWear
+            ? null
+            : AppBar(
+                title: const Text('Language Revision'),
               ),
-              onPressed: () {
-                Navigator.of(context).push(MaterialPageRoute(
-                    builder: (_) => ExcercisePage(data: englishToFrench)));
-              },
-            ),
-            SizedBox(
-              height: space,
-            ),
-            ElevatedButton(
-              child: Text(
-                '🇫🇷 → 🇬🇧',
-                style: textStyle,
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              ElevatedButton(
+                child: Text(
+                  '🇬🇧 → 🇫🇷',
+                  style: textStyle,
+                ),
+                onPressed: () {
+                  Navigator.of(context).push(MaterialPageRoute(
+                      builder: (_) => ExcercisePage(data: englishToFrench)));
+                },
               ),
-              onPressed: () {
-                Navigator.of(context).push(MaterialPageRoute(
-                    builder: (_) => ExcercisePage(data: frenchToEnglish)));
-              },
-            ),
-            SizedBox(
-              height: space,
-            ),
-            ElevatedButton(
-              child: Text(
-                '🇬🇧 ↔ 🇫🇷',
-                style: textStyle,
+              SizedBox(
+                height: space,
               ),
-              onPressed: () {
-                Navigator.of(context).push(MaterialPageRoute(
-                    builder: (_) => ExcercisePage(data: () {
-                          final map = <String, String>{
-                            ...frenchToEnglish,
-                            ...englishToFrench
-                          };
-                          final list = map.entries.toList()..shuffle();
-                          return Map.fromEntries(list);
-                        }())));
-              },
-            ),
-          ],
+              ElevatedButton(
+                child: Text(
+                  '🇫🇷 → 🇬🇧',
+                  style: textStyle,
+                ),
+                onPressed: () {
+                  Navigator.of(context).push(MaterialPageRoute(
+                      builder: (_) => ExcercisePage(data: frenchToEnglish)));
+                },
+              ),
+              SizedBox(
+                height: space,
+              ),
+              ElevatedButton(
+                child: Text(
+                  '🇬🇧 ↔ 🇫🇷',
+                  style: textStyle,
+                ),
+                onPressed: () {
+                  Navigator.of(context).push(MaterialPageRoute(
+                      builder: (_) => ExcercisePage(data: () {
+                            final map = <String, String>{
+                              ...frenchToEnglish,
+                              ...englishToFrench
+                            };
+                            final list = map.entries.toList();
+                            if (shuffle) {
+                              list.shuffle();
+                            }
+                            return Map.fromEntries(list);
+                          }())));
+                },
+              ),
+              SizedBox(
+                height: space,
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Checkbox(
+                    value: shuffle,
+                    onChanged: (value) {
+                      shuffle = value!;
+                      setState(() {});
+                    },
+                  ),
+                  Text(
+                    'Shuffle',
+                    style: textStyle,
+                  ),
+                ],
+              )
+            ],
+          ),
         ),
       ),
     );
@@ -114,59 +169,175 @@ class ExcercisePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final axis = MediaQuery.of(context).size.aspectRatio > 1
-        ? Axis.horizontal
-        : Axis.vertical;
-    return Scaffold(
-      appBar: defaultTargetPlatform != TargetPlatform.android ? AppBar() : null,
+    final scaffold = Scaffold(
+      appBar: isWear
+          ? null
+          : AppBar(
+              title: const Text('Language Revision'),
+            ),
       body: Center(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10),
-          child: StatefulBuilder(builder: (context, setState) {
-            return CarouselSlider.builder(
-              options: CarouselOptions(
-                autoPlay: false,
-                enlargeCenterPage: true,
-                scrollDirection: axis,
-                enableInfiniteScroll: false,
-                viewportFraction: 0.9,
-                enlargeStrategy: CenterPageEnlargeStrategy.height,
-              ),
-              itemBuilder: (context, index, realIndex) {
-                final item = data.entries.toList()[index];
-                return FlipCard(
-                  key: ValueKey(item),
-                  direction: FlipDirection.VERTICAL,
-                  front: Card(
-                    color: const Color.fromARGB(255, 22, 20, 20),
-                    child: Center(
-                      child: Text(
-                        item.key,
-                        style: textStyle,
+          padding: isWear
+              ? EdgeInsets.zero
+              : const EdgeInsets.symmetric(
+                  horizontal: 10,
+                ),
+          child: PageView.builder(
+            scrollDirection: Axis.vertical,
+            padEnds: false,
+            itemBuilder: (context, index) {
+              final item = data.entries.toList()[index];
+              return ItemWidget(item: item, index: index, length: data.length);
+            },
+            itemCount: data.length,
+          ),
+        ),
+      ),
+    );
+
+    if (isWear) {
+      return scaffold;
+    } else {
+      return SafeArea(child: scaffold);
+    }
+  }
+}
+
+class ItemWidget extends StatefulWidget {
+  const ItemWidget({
+    Key? key,
+    required this.item,
+    required this.index,
+    required this.length,
+  }) : super(key: key);
+
+  final MapEntry<String, String> item;
+  final int index;
+  final int length;
+
+  @override
+  State<ItemWidget> createState() => _ItemWidgetState();
+}
+
+class _ItemWidgetState extends State<ItemWidget> with TickerProviderStateMixin {
+  bool flipped = false;
+
+  Animation<Color?>? animation;
+  AnimationController? controller;
+
+  @override
+  void initState() {
+    super.initState();
+    controller = AnimationController(
+        duration: const Duration(milliseconds: 300), vsync: this);
+  }
+
+  void animate() {
+    if (!flipped) {
+      controller?.reverse();
+      return;
+    }
+
+    final endColor = [
+      Colors.red[700],
+      Colors.green[700],
+      Colors.purple[700],
+      Colors.amber[700],
+    ][widget.index % 4]!;
+
+    controller?.stop();
+
+    final localAnimation = animation =
+        ColorTween(begin: const Color.fromARGB(255, 22, 20, 20), end: endColor)
+            .animate(controller!);
+
+    localAnimation.addListener(() {
+      if (localAnimation != animation) {
+        return;
+      } else {
+        setState(() {});
+      }
+    });
+
+    controller?.forward();
+  }
+
+  Color get cardColor {
+    if (flipped) {
+      return [
+        Colors.amber[700],
+        Colors.green[700],
+        Colors.purple[700],
+        Colors.red[700],
+      ][widget.index % 4]!;
+    } else {
+      return const Color.fromARGB(255, 22, 20, 20);
+    }
+  }
+
+  TextStyle? get contentTextStyle {
+    if (flipped) {
+      return textStyle?.copyWith(
+          color: widget.index % 4 == 3 ? Colors.black87 : null);
+    } else {
+      return textStyle;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      key: ValueKey(widget.item),
+      onTap: () {
+        setState(() {
+          flipped = !flipped;
+          animate();
+        });
+      },
+      child: Card(
+        color: animation?.value ?? const Color.fromARGB(255, 22, 20, 20),
+        child: Padding(
+          padding: isWear
+              ? EdgeInsets.zero
+              : const EdgeInsets.symmetric(
+                  vertical: 16.0,
+                  horizontal: 8,
+                ),
+          child: Column(
+            mainAxisSize: MainAxisSize.max,
+            children: [
+              Expanded(
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        widget.item.key,
+                        style: contentTextStyle,
                         textAlign: TextAlign.center,
                       ),
-                    ),
-                  ),
-                  back: Card(
-                    color: [
-                      Colors.red[700],
-                      Colors.green[700],
-                      Colors.purple[700],
-                      Colors.amber[700],
-                    ][index % 4],
-                    child: Center(
+                      SizedBox(
+                        height: space * 2,
+                      ),
+                      AnimatedOpacity(
+                        duration: const Duration(milliseconds: 300),
+                        opacity: flipped ? 1 : 0,
                         child: Text(
-                      item.value,
-                      style: textStyle?.copyWith(
-                          color: index % 4 == 3 ? Colors.black87 : null),
-                      textAlign: TextAlign.center,
-                    )),
+                          widget.item.value,
+                          style: contentTextStyle,
+                          textAlign: TextAlign.center,
+                        ),
+                      )
+                    ],
                   ),
-                );
-              },
-              itemCount: data.length,
-            );
-          }),
+                ),
+              ),
+              Chip(
+                label: Text('${widget.index + 1}/${widget.length}'),
+                backgroundColor: Colors.transparent,
+              ),
+            ],
+          ),
         ),
       ),
     );
