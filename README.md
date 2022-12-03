@@ -1,16 +1,11 @@
 # language_learning
 
-A new Flutter project.
+Language Learning: Showcase flutter app for Wearable devices
 
-## Getting Started
+# Demo
+https://www.youtube.com/watch?v=KEg_fKhbIGM&ab_channel=RahulKumar
+[![Demo](https://img.youtube.com/vi/KEg_fKhbIGM/0.jpg)](https://www.youtube.com/watch?v=KEg_fKhbIGM)
 
-This project is a starting point for a Flutter application.
+# Licence
+Apache 2.0
 
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
