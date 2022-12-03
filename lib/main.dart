@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:is_wear/is_wear.dart';
@@ -11,6 +13,8 @@ double space = 5;
 bool shuffle = true;
 
 late bool isWear;
+
+WearShape? shape;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -52,9 +56,10 @@ class App extends StatelessWidget {
     );
 
     if (isWear) {
-      textStyle = const TextStyle(fontSize: 20);
+      textStyle = const TextStyle(fontSize: 18);
       return WatchShape(
-        builder: ((context, shape, child) {
+        builder: ((context, s, child) {
+          shape = s;
           return child!;
         }),
         child: materialApp,
@@ -154,7 +159,7 @@ class _SelectionPageState extends State<SelectionPage> {
                     style: textStyle,
                   ),
                 ],
-              )
+              ),
             ],
           ),
         ),
@@ -169,6 +174,16 @@ class ExcercisePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final pageView = PageView.builder(
+      scrollDirection: Axis.vertical,
+      padEnds: false,
+      itemBuilder: (context, index) {
+        final item = data.entries.toList()[index];
+        return ItemWidget(item: item, index: index, length: data.length);
+      },
+      itemCount: data.length,
+    );
+
     final scaffold = Scaffold(
       appBar: isWear
           ? null
@@ -182,15 +197,7 @@ class ExcercisePage extends StatelessWidget {
               : const EdgeInsets.symmetric(
                   horizontal: 10,
                 ),
-          child: PageView.builder(
-            scrollDirection: Axis.vertical,
-            padEnds: false,
-            itemBuilder: (context, index) {
-              final item = data.entries.toList()[index];
-              return ItemWidget(item: item, index: index, length: data.length);
-            },
-            itemCount: data.length,
-          ),
+          child: pageView,
         ),
       ),
     );
@@ -295,51 +302,94 @@ class _ItemWidgetState extends State<ItemWidget> with TickerProviderStateMixin {
         });
       },
       child: Card(
-        color: animation?.value ?? const Color.fromARGB(255, 22, 20, 20),
-        child: Padding(
-          padding: isWear
-              ? EdgeInsets.zero
-              : const EdgeInsets.symmetric(
-                  vertical: 16.0,
-                  horizontal: 8,
-                ),
-          child: Column(
-            mainAxisSize: MainAxisSize.max,
-            children: [
-              Expanded(
-                child: Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        widget.item.key,
-                        style: contentTextStyle,
-                        textAlign: TextAlign.center,
-                      ),
-                      SizedBox(
-                        height: space * 2,
-                      ),
-                      AnimatedOpacity(
-                        duration: const Duration(milliseconds: 300),
-                        opacity: flipped ? 1 : 0,
-                        child: Text(
-                          widget.item.value,
+          shape: shape == WearShape.round
+              ? const CircleBorder(
+                  side: BorderSide(),
+                )
+              : null,
+          color: animation?.value ?? const Color.fromARGB(255, 22, 20, 20),
+          child: Padding(
+            padding: isWear
+                ? EdgeInsets.zero
+                : const EdgeInsets.symmetric(
+                    vertical: 16.0,
+                    horizontal: 8,
+                  ),
+            child: Stack(
+              children: [
+                Center(
+                  child: () {
+                    final column = Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          widget.item.key,
                           style: contentTextStyle,
                           textAlign: TextAlign.center,
+                          overflow: TextOverflow.clip,
                         ),
-                      )
-                    ],
+                        SizedBox(
+                          height: space * 2,
+                        ),
+                        AnimatedOpacity(
+                          duration: const Duration(milliseconds: 300),
+                          opacity: flipped ? 1 : 0,
+                          child: Text(
+                            widget.item.value,
+                            style: contentTextStyle,
+                            textAlign: TextAlign.center,
+                            overflow: TextOverflow.clip,
+                          ),
+                        )
+                      ],
+                    );
+                    if (shape == WearShape.round) {
+                      // return ClipPath(
+                      //   clipper: CircularClipper(),
+                      //   clipBehavior: Clip.hardEdge,
+                      //   child: column,
+                      // );
+                      Size size = MediaQuery.of(context).size;
+                      //45-degree
+                      double x = (size.width / 2 * sin(0.785398)).abs();
+                      return SizedBox.square(
+                        dimension: x * 2,
+                        child: column,
+                      );
+                    } else {
+                      return column;
+                    }
+                  }(),
+                ),
+                Align(
+                  alignment: Alignment.bottomCenter,
+                  child: Chip(
+                    label: Text('${widget.index + 1}/${widget.length}'),
+                    backgroundColor: Colors.transparent,
                   ),
                 ),
-              ),
-              Chip(
-                label: Text('${widget.index + 1}/${widget.length}'),
-                backgroundColor: Colors.transparent,
-              ),
-            ],
-          ),
-        ),
-      ),
+              ],
+            ),
+          )),
     );
+  }
+}
+
+class CircularClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    final double width = size.width;
+    final double height = size.height;
+    final Path path = Path()
+      ..addOval(Rect.fromLTWH(0, 0, width, height))
+      ..close();
+    return path;
+  }
+
+  @override
+  bool shouldReclip(CustomClipper<Path> oldClipper) {
+    return oldClipper != this;
   }
 }
