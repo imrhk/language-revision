@@ -21,11 +21,36 @@ if (flutterVersionName == null) {
     flutterVersionName = '1.0'
 }
 
+
+def releaseSigningProperties = new Properties()
+def releaseSigningPropertiesFile = rootProject.file("release_signing.properties")
+if(releaseSigningPropertiesFile.exists()) {
+    releaseSigningPropertiesFile.withReader('UTF-8') { reader ->
+        releaseSigningProperties.load(reader)
+    }
+}
+
+def releaseSigningFileName = releaseSigningProperties.getProperty("release_signing.filename");
+def releaseSigningStorePassword = releaseSigningProperties.getProperty("release_signing.store_password");
+def releaseSigningKeyAlias = releaseSigningProperties.getProperty("release_signing.key_alias");
+def releaseSigningKeyPassword = releaseSigningProperties.getProperty("release_signing.key_password");
+
+
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
 
 android {
+    signingConfigs {
+        releaseConfig {
+            storeFile file(releaseSigningFileName)
+            storePassword releaseSigningStorePassword
+            keyAlias releaseSigningKeyAlias
+            keyPassword releaseSigningKeyPassword
+            v2SigningEnabled true
+        }
+    }
+
     compileSdkVersion flutter.compileSdkVersion
     ndkVersion flutter.ndkVersion
 
@@ -43,10 +68,7 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId "com.example.language_learning"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://docs.flutter.dev/deployment/android#reviewing-the-build-configuration.
+        applicationId "com.litedevs.lingomelon"
         minSdkVersion 23
         targetSdkVersion flutter.targetSdkVersion
         versionCode flutterVersionCode.toInteger()
@@ -55,9 +77,7 @@ android {
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig signingConfigs.debug
+            signingConfig signingConfigs.releaseConfig
         }
     }
 }

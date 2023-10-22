@@ -1,7 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.language_learning">
    <application
-        android:label="language_learning"
+        android:label="Lingomelon"
         android:name="${applicationName}"
         android:icon="@mipmap/launcher_icon">
         <activity

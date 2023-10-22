@@ -3,6 +3,8 @@ import 'dart:math';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:is_wear/is_wear.dart';
+import 'package:language_learning/background_widget.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wear/wear.dart';
 
 import 'data.dart';
@@ -16,8 +18,12 @@ late bool isWear;
 
 WearShape? shape;
 
+late SharedPreferences sharedPreferences;
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  sharedPreferences = await SharedPreferences.getInstance();
 
   try {
     isWear = (await IsWear().check()) ?? false;
@@ -37,7 +43,7 @@ class AppScrollBehavior extends MaterialScrollBehavior {
 }
 
 class App extends StatelessWidget {
-  const App({Key? key}) : super(key: key);
+  const App({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -46,10 +52,15 @@ class App extends StatelessWidget {
       theme: ThemeData(
         useMaterial3: true,
       ),
-      darkTheme: ThemeData.dark().copyWith(
+      darkTheme: ThemeData.from(
         useMaterial3: true,
-        scaffoldBackgroundColor: Colors.black,
-        appBarTheme: const AppBarTheme(backgroundColor: Colors.black),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF967bb6),
+          brightness: Brightness.dark,
+        ),
+      ).copyWith(
+        scaffoldBackgroundColor: Colors.transparent,
+        appBarTheme: const AppBarTheme(backgroundColor: Colors.transparent),
       ),
       themeMode: ThemeMode.dark,
       home: const SelectionPage(),
@@ -73,96 +84,148 @@ class App extends StatelessWidget {
 }
 
 class SelectionPage extends StatefulWidget {
-  const SelectionPage({Key? key}) : super(key: key);
+  const SelectionPage({super.key});
 
   @override
   State<SelectionPage> createState() => _SelectionPageState();
 }
 
 class _SelectionPageState extends State<SelectionPage> {
+  bool _isIntroShown = false;
+  @override
+  void initState() {
+    super.initState();
+    _isIntroShown = sharedPreferences.getBool('INTRO_SHOWN') ?? false;
+  }
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: Scaffold(
-        appBar: isWear
-            ? null
-            : AppBar(
-                title: const Text('Language Revision'),
-              ),
-        body: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              ElevatedButton(
-                child: Text(
-                  '🇬🇧 → 🇫🇷',
-                  style: textStyle,
-                ),
-                onPressed: () {
-                  Navigator.of(context).push(MaterialPageRoute(
-                      builder: (_) => ExcercisePage(data: englishToFrench)));
-                },
-              ),
-              SizedBox(
-                height: space,
-              ),
-              ElevatedButton(
-                child: Text(
-                  '🇫🇷 → 🇬🇧',
-                  style: textStyle,
-                ),
-                onPressed: () {
-                  Navigator.of(context).push(MaterialPageRoute(
-                      builder: (_) => ExcercisePage(data: frenchToEnglish)));
-                },
-              ),
-              SizedBox(
-                height: space,
-              ),
-              ElevatedButton(
-                child: Text(
-                  '🇬🇧 ↔ 🇫🇷',
-                  style: textStyle,
-                ),
-                onPressed: () {
-                  Navigator.of(context).push(MaterialPageRoute(
-                      builder: (_) => ExcercisePage(data: () {
-                            final map = <String, String>{
-                              ...frenchToEnglish,
-                              ...englishToFrench
-                            };
-                            final list = map.entries.toList();
-                            if (shuffle) {
-                              list.shuffle();
-                            }
-                            return Map.fromEntries(list);
-                          }())));
-                },
-              ),
-              SizedBox(
-                height: space,
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Checkbox(
-                    value: shuffle,
-                    onChanged: (value) {
-                      shuffle = value!;
-                      setState(() {});
-                    },
+      child: Stack(
+        children: [
+          const BackgroundWidget(),
+          Scaffold(
+            appBar: isWear
+                ? null
+                : AppBar(
+                    title: const Text('Lingomelon'),
                   ),
-                  Text(
-                    'Shuffle',
-                    style: textStyle,
+            body: Center(
+              child: Visibility(
+                visible: _isIntroShown,
+                replacement: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'App to practice language',
+                        style: Theme.of(context).textTheme.displaySmall,
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(
+                        height: 20,
+                      ),
+                      FilledButton(
+                        child: Text(
+                          'Proceed',
+                          style: textStyle?.copyWith(fontSize: 18),
+                        ),
+                        onPressed: () async {
+                          await sharedPreferences.setBool('INTRO_SHOWN', true);
+                          _isIntroShown = true;
+                          setState(() {});
+                        },
+                      ),
+                    ],
                   ),
-                ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    IntrinsicWidth(
+                      child: FilledButton(
+                        child: Text(
+                          'English to French',
+                          style: textStyle?.copyWith(fontSize: 18),
+                        ),
+                        onPressed: () {
+                          Navigator.of(context).push(MaterialPageRoute(
+                              builder: (_) =>
+                                  ExcercisePage(data: englishToFrench)));
+                        },
+                      ),
+                    ),
+                    SizedBox(
+                      height: space,
+                    ),
+                    IntrinsicWidth(
+                      child: FilledButton(
+                        child: Text(
+                          'French to English',
+                          style: textStyle?.copyWith(fontSize: 18),
+                        ),
+                        onPressed: () {
+                          Navigator.of(context).push(MaterialPageRoute(
+                              builder: (_) =>
+                                  ExcercisePage(data: frenchToEnglish)));
+                        },
+                      ),
+                    ),
+                    SizedBox(
+                      height: space,
+                    ),
+                    IntrinsicWidth(
+                      child: FilledButton(
+                        child: Text(
+                          'English and French mix',
+                          style: textStyle?.copyWith(fontSize: 18),
+                        ),
+                        onPressed: () {
+                          Navigator.of(context).push(MaterialPageRoute(
+                              builder: (_) => ExcercisePage(data: () {
+                                    final map = <String, String>{
+                                      ...frenchToEnglish,
+                                      ...englishToFrench
+                                    };
+                                    final list = map.entries.toList();
+                                    if (shuffle) {
+                                      list.shuffle();
+                                    }
+                                    return Map.fromEntries(list);
+                                  }())));
+                        },
+                      ),
+                    ),
+                    SizedBox(
+                      height: space,
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Checkbox(
+                          value: shuffle,
+                          onChanged: (value) {
+                            shuffle = value!;
+                            setState(() {});
+                          },
+                        ),
+                        Text(
+                          'Shuffle',
+                          style: textStyle?.copyWith(fontSize: 18),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -170,7 +233,7 @@ class _SelectionPageState extends State<SelectionPage> {
 
 class ExcercisePage extends StatelessWidget {
   final Map<String, String> data;
-  const ExcercisePage({Key? key, this.data = const {}}) : super(key: key);
+  const ExcercisePage({super.key, this.data = const {}});
 
   @override
   Widget build(BuildContext context) {
@@ -212,11 +275,11 @@ class ExcercisePage extends StatelessWidget {
 
 class ItemWidget extends StatefulWidget {
   const ItemWidget({
-    Key? key,
+    super.key,
     required this.item,
     required this.index,
     required this.length,
-  }) : super(key: key);
+  });
 
   final MapEntry<String, String> item;
   final int index;
@@ -275,7 +338,7 @@ class _ItemWidgetState extends State<ItemWidget> with TickerProviderStateMixin {
         Colors.amber[700],
         Colors.green[700],
         Colors.purple[700],
-        Colors.red[700],
+        Colors.pink[700],
       ][widget.index % 4]!;
     } else {
       return const Color.fromARGB(255, 22, 20, 20);
@@ -307,7 +370,7 @@ class _ItemWidgetState extends State<ItemWidget> with TickerProviderStateMixin {
                   side: BorderSide(),
                 )
               : null,
-          color: animation?.value ?? const Color.fromARGB(255, 22, 20, 20),
+          color: animation?.value ?? const Color.fromARGB(255, 12, 12, 12),
           child: Padding(
             padding: isWear
                 ? EdgeInsets.zero
